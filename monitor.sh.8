@@ -1,0 +1,89 @@
+.\" Manpage for Ping Management Script.
+.TH monitor.sh 8 "24 January 2025" "1.0" "Ping Management Script"
+.SH NAME
+monitor.sh \- manage hosts by adding, removing, displaying, and pinging them, with cron job support.
+.SH SYNOPSIS
+monitor.sh [COMMAND] [ARGUMENTS]
+.SH DESCRIPTION
+The \fBmonitor.sh\fP script provides functionality to manage a list of hosts and perform various operations such as adding, removing, displaying, and pinging them. It also includes options to configure and manage periodic pinging using cron jobs.
+
+.SH COMMANDS
+.TP
+\fBaddhost\fP \fI<HOST>\fP
+Add a new host to the list of hosts.
+.TP
+\fBdelhost\fP \fI<HOST>\fP
+Remove an existing host from the list of hosts.
+.TP
+\fBshowhosts\fP
+Display all the hosts in the list.
+.TP
+\fBpinghosts\fP
+Ping all hosts in the list and log the results.
+.TP
+\fBinstall\fP \fI<INTERVAL>\fP
+Install a cron job to periodically ping hosts at the specified interval (in minutes).
+.TP
+\fBuninstall\fP
+Remove the installed cron job for this script.
+.TP
+\fBhelp\fP
+Show the help section.
+
+.SH CONFIGURATION FILE
+The script uses a configuration file named \fBconfig.cfg\fP, located at ~/.monitor/config.cfg. It defines the following default values if the file does not already exist:
+.PP
+.RS
+.PD 0
+PING_PACKETS=3
+PING_TIMEOUT=5
+PING_INTERVAL=1
+.PD
+.RE
+.PP
+You can modify the \fBconfig.cfg\fP file to suit your needs.
+
+.SH EXAMPLES
+.TP
+Add a host to the list:
+\fB./monitor.sh addhost 192.168.1.1\fP
+.TP
+Remove a host from the list:
+\fB./monitor.sh delhost 192.168.1.1\fP
+.TP
+Display all hosts:
+\fB./monitor.sh showhosts\fP
+.TP
+Ping all hosts and log results:
+\fB./monitor.sh pinghosts\fP
+.TP
+Install a cron job to ping hosts every 5 minutes:
+\fB./monitor.sh install 5\fP
+.TP
+Remove the installed cron job:
+\fB./monitor.sh uninstall\fP
+.TP
+Show the help section:
+\fB./monitor.sh help\fP
+
+.SH ERROR CODES
+.TP
+\fB0\fP
+Success.
+.TP
+\fB1\fP
+Missing value or invalid argument.
+.TP
+\fB2\fP
+File is empty (e.g., no hosts in \fBhosts.txt\fP).
+.TP
+\fB3\fP
+Host already exists in the \fBhosts.txt\fP file.
+.TP
+\fB4\fP
+Configuration file (\fBconfig.cfg\fP) not found or invalid.
+
+.SH AUTHOR
+Ping Management Script was created by Lukas Marcel Luy (phoenixthrush).
+.SH SEE ALSO
+cron(8), ping(8)

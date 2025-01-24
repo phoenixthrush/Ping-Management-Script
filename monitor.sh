@@ -1,0 +1,196 @@
+#!/usr/bin/env bash
+
+SCRIPT_NAME=$0
+ACTION=$1
+VALUE=$2
+
+SCRIPT_DIR="$HOME/.${SCRIPT_NAME##*/}" # remove path and file extension
+SCRIPT_DIR="${SCRIPT_DIR%.*}"          # remove file extension
+mkdir -p "$SCRIPT_DIR"
+
+HOSTS_FILE="$SCRIPT_DIR/hosts.txt"
+LOG_FILE="$SCRIPT_DIR/error.log"
+SCRIPT_FILE="$(pwd)/${SCRIPT_NAME#./}"
+CONFIG_FILE="$SCRIPT_DIR/config.cfg"
+
+addhost() {
+    # check if value is given
+    if [ -n "$VALUE" ]; then
+        # check if host exists
+        touch $HOSTS_FILE
+        if grep -q "$VALUE" "$HOSTS_FILE"; then
+            echo "Host $VALUE is already in $HOSTS_FILE."
+            return 3
+        else
+            # add host to hosts file
+            echo "$VALUE" >>"$HOSTS_FILE"
+            echo "Host $VALUE added to $HOSTS_FILE."
+        fi
+    else
+        echo "You need to specify a value when using 'addhost'."
+        echo "E.g.: '$SCRIPT_NAME addhost 1.1.1.1'."
+        return 1
+    fi
+}
+
+delhost() {
+    # check if value is given
+    if [ -n "$VALUE" ]; then
+        # exclude host from hosts file
+        grep -v "$VALUE" "$HOSTS_FILE" >"$HOSTS_FILE.tmp"
+        # overwrite old hosts file
+        mv "$HOSTS_FILE.tmp" "$HOSTS_FILE"
+        echo "Host $VALUE removed from $HOSTS_FILE."
+    else
+        echo "You need to specify a value when using 'delhost'."
+        echo "E.g.: '$SCRIPT_NAME delhost 1.1.1.1'."
+        return 1
+    fi
+}
+
+showhosts() {
+    # check if hosts file is empty
+    if [ ! -s "$HOSTS_FILE" ]; then
+        echo "There are no hosts in $HOSTS_FILE."
+        return 2
+    else
+        echo Current hosts in file:
+        cat $HOSTS_FILE
+    fi
+}
+
+pinghosts() {
+    # load config file values
+    loadconfig
+
+    # check if hosts file exists
+    if [ -f "$HOSTS_FILE" ]; then
+        # read hosts file line by line
+        while IFS= read -r host; do
+            # -c -> count of pakets
+            # -t -> time between pakets sent
+            # -W -> time between sending packets
+            ping $host -c $PING_PACKETS -t $PING_TIMEOUT -W $PING_INTERVAL >/dev/null
+            # check if ping went through
+            if [ $? -eq 0 ]; then
+                echo -e "\033[32m[ UP ]\033[0m    $host"
+            else
+                echo -e "\033[31m[DOWN]\033[0m    $host"
+                echo -e "$(date) - $host" >>$LOG_FILE
+            fi
+        done <$HOSTS_FILE
+    else
+        echo "There are no hosts in $HOSTS_FILE."
+        return 2
+    fi
+}
+
+install() {
+    # check if value is given
+    if [ -n "$VALUE" ]; then
+        # check if file has executable flag set
+        if [ ! -x "$FILE" ]; then
+            echo "$SCRIPT_FILE is not executable."
+            echo "Flag will be set using chmod."
+            chmod +x $SCRIPT_FILE
+        fi
+        # backup old cronjob
+        crontab -l >cronjob.bak
+        # exlude old scripts conjob if exists
+        grep -v $SCRIPT_FILE cronjob.bak >cronjob.new
+        # add new script to cronjob
+        echo "*/$VALUE * * * * $SCRIPT_FILE" >>cronjob.new
+        cat cronjob.new | crontab
+        # check if worked
+        if [ $? -ne 0 ]; then
+            cat cronjob.bak | crontab
+        fi
+        rm -f cronjob.bak cronjob.new
+    else
+        echo "You need to specify a value when using 'install'."
+        echo "E.g.: '$SCRIPT_NAME install 5'."
+        return 1
+    fi
+}
+
+uninstall() {
+    # backup old cronjob
+    crontab -l >cronjob.bak
+    # exlude scripts conjob if exists
+    grep -v $SCRIPT_FILE cronjob.bak >cronjob.new
+    cat cronjob.new | crontab
+    # check if worked
+    if [ $? -ne 0 ]; then
+        cat cronjob.bak | crontab
+    fi
+    rm -f cronjob.bak cronjob.new
+}
+
+loadconfig() {
+    # check if config file exists
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "Configuration file not found. Creating one at $CONFIG_FILE."
+        cat >"$CONFIG_FILE" <<EOF
+# Specify the number of ping packets to send
+PING_PACKETS=3
+
+# Specify the timeout for each ping request
+PING_TIMEOUT=5
+
+# Specify the interval between pings
+PING_INTERVAL=1
+EOF
+        echo "Default configuration created."
+    fi
+
+    # load config
+    . "$CONFIG_FILE"
+
+    # validate values
+    if [ -z "$PING_PACKETS" ] || [ -z "$PING_TIMEOUT" ] || [ -z "$PING_INTERVAL" ]; then
+        echo "Invalid configuration. Please ensure all variables (PING_PACKETS, PING_TIMEOUT, PING_INTERVAL) are set in $CONFIG_FILE."
+        exit 4
+    fi
+}
+
+help() {
+    echo "Available arguments:"
+    echo "  - addhost      <host>      Add a host to the list"
+    echo "  - delhost      <host>      Remove a host from the list"
+    echo "  - showhosts                Display all hosts"
+    echo "  - pinghosts                Ping all listed hosts"
+    echo "  - install      <minutes>   Install cronjob with interval"
+    echo "  - uninstall                Remove the installed cronjob"
+}
+
+case $ACTION in
+addhost)
+    addhost
+    ;;
+delhost)
+    delhost
+    ;;
+showhosts)
+    showhosts
+    ;;
+ping)
+    pinghosts
+    ;;
+install)
+    install
+    ;;
+uninstall)
+    uninstall
+    ;;
+help)
+    help
+    ;;
+*)
+    if [ -z "$VALUE" ]; then
+        pinghosts
+    else
+        echo "Invalid argument specified.\n"
+        help
+    fi
+    ;;
+esac
