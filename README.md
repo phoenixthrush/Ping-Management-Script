@@ -2,6 +2,42 @@
 
 This script allows you to manage a list of hosts by adding, removing, displaying and pinging them. It also provides the ability to install and uninstall a cron job to automatically ping at a specified interval.
 
+# Installation
+
+## Method 1: Via GitHub Repository
+
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/phoenixthrush/Ping-Management-Script.git monitor
+    ```
+
+2. Copy the script to `/usr/bin/monitor`:
+    ```bash
+    sudo cp monitor/monitor/usr/bin/monitor /usr/bin/monitor
+    ```
+
+3. Make the script executable:
+    ```bash
+    sudo chmod +x /usr/bin/monitor
+    ```
+
+4. Run the script:
+    ```bash
+    monitor
+    ```
+
+## Method 2: Using my apt Repository
+
+1. Install via the apt repository:
+    ```bash
+    curl -sSL https://phoenixthrush.com/repo/install.sh | bash
+    ```
+
+2. Install the monitor package:
+    ```bash
+    sudo apt install monitor
+    ```
+
 ## Script Features
 
 -   `addhost`: Add a new host to the list of hosts.
