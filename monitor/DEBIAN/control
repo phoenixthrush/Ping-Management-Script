@@ -1,0 +1,5 @@
+Package: monitor
+Version: 0.0.1
+Architecture: all
+Maintainer: phoenixthrush <contact@phoenixthrush.com>
+Description: Manage hosts by adding, removing, displaying, and pinging them, with cron job support.

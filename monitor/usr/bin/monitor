@@ -5,12 +5,11 @@ ACTION=$1
 VALUE=$2
 
 SCRIPT_DIR="$HOME/.${SCRIPT_NAME##*/}" # remove path and file extension
-SCRIPT_DIR="${SCRIPT_DIR%.*}"          # remove file extension
 mkdir -p "$SCRIPT_DIR"
 
 HOSTS_FILE="$SCRIPT_DIR/hosts.txt"
 LOG_FILE="$SCRIPT_DIR/error.log"
-SCRIPT_FILE="$(pwd)/${SCRIPT_NAME#./}"
+SCRIPT_FILE="$(realpath "${SCRIPT_NAME}")"
 CONFIG_FILE="$SCRIPT_DIR/config.cfg"
 
 addhost() {
@@ -70,7 +69,7 @@ pinghosts() {
             # -c -> count of pakets
             # -t -> time between pakets sent
             # -W -> time between sending packets
-            ping $host -c $PING_PACKETS -t $PING_TIMEOUT -W $PING_INTERVAL >/dev/null
+            ping $host -c $PING_PACKETS -W $PING_TIMEOUT -i $PING_INTERVAL >/dev/null
             # check if ping went through
             if [ $? -eq 0 ]; then
                 echo -e "\033[32m[ UP ]\033[0m    $host"
@@ -89,11 +88,11 @@ install() {
     # check if value is given
     if [ -n "$VALUE" ]; then
         # check if file has executable flag set
-        if [ ! -x "$FILE" ]; then
-            echo "$SCRIPT_FILE is not executable."
-            echo "Flag will be set using chmod."
-            chmod +x $SCRIPT_FILE
-        fi
+        #if [ ! -x "$FILE" ]; then
+        #    echo "$SCRIPT_FILE is not executable."
+        #    echo "Flag will be set using chmod."
+        #    chmod +x $SCRIPT_FILE
+        #fi
         # backup old cronjob
         crontab -l >cronjob.bak
         # exlude old scripts conjob if exists

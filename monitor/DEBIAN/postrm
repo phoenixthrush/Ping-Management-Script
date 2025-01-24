@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+for user_home in /home/*; do
+    if [ -d "$user_home/.monitor" ]; then
+        rm -rf "$user_home/.monitor"
+    fi
+done
