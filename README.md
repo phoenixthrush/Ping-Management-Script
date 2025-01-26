@@ -104,10 +104,16 @@ Remove the installed cronjob.
 ./monitor.sh uninstall
 ```
 
-Show the help section.
+To display the help section, run the following command:
 
 ```shell
 ./monitor.sh help
+```
+
+If installed via package, you can also view the help documentation using:
+
+```shell
+man monitor
 ```
 
 ## Script Overview
